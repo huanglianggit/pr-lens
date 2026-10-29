@@ -1,0 +1,63 @@
+name: Validate native build cleanup
+on:
+  push:
+    branches:
+      - validation/windows-cleanup-91-2026-10-29
+permissions:
+  contents: read
+jobs:
+  verify:
+    name: Linux ${{ matrix.variant }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        variant: [baseline, patched]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.5.2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24.19.0
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Apply proposed cleanup commands
+        if: matrix.variant == 'patched'
+        shell: python
+        run: |
+          import base64, hashlib
+          from pathlib import Path
+          entries = {'packages/schema/package.json': 'ewogICJuYW1lIjogIkBjb2xkdGVhL3ByLWxlbnMtc2NoZW1hIiwKICAidmVyc2lvbiI6ICIwLjkuMCIsCiAgImRlc2NyaXB0aW9uIjogIlRoZSBQUiBMZW5zIGNvbnRyYWN0OiB2ZXJzaW9uZWQgc2NoZW1hcyBmb3IgYXJjaGl0ZWN0dXJlIC8gZGF0YS1mbG93IC8gZGF0YS1tb2RlbCBncmFwaCBkb2N1bWVudHMsIGJhc2VsaW5lIHBhdGNoZXMsIGNvbmZpZyBhbmQgcmVuZGVyIG1hbmlmZXN0cy4iLAogICJsaWNlbnNlIjogIk1JVCIsCiAgImF1dGhvciI6ICJDb2xkdGVhIEFJIiwKICAicmVwb3NpdG9yeSI6IHsKICAgICJ0eXBlIjogImdpdCIsCiAgICAidXJsIjogImdpdCtodHRwczovL2dpdGh1Yi5jb20vY29sZHRlYWRvdGFpL3ByLWxlbnMuZ2l0IiwKICAgICJkaXJlY3RvcnkiOiAicGFja2FnZXMvc2NoZW1hIgogIH0sCiAgImhvbWVwYWdlIjogImh0dHBzOi8vZ2l0aHViLmNvbS9jb2xkdGVhZG90YWkvcHItbGVucy90cmVlL21haW4vcGFja2FnZXMvc2NoZW1hI3JlYWRtZSIsCiAgImtleXdvcmRzIjogWwogICAgInByLWxlbnMiLAogICAgImNvZGUtcmV2aWV3IiwKICAgICJhcmNoaXRlY3R1cmUtZGlhZ3JhbSIsCiAgICAiZGF0YS1mbG93IiwKICAgICJqc29uLXNjaGVtYSIsCiAgICAiem9kIgogIF0sCiAgInR5cGUiOiAibW9kdWxlIiwKICAic2lkZUVmZmVjdHMiOiBmYWxzZSwKICAiZXhwb3J0cyI6IHsKICAgICIuIjogewogICAgICAidHlwZXMiOiAiLi9kaXN0L2luZGV4LmQudHMiLAogICAgICAiZGVmYXVsdCI6ICIuL2Rpc3QvaW5kZXguanMiCiAgICB9LAogICAgIi4vZXhhbXBsZXMiOiB7CiAgICAgICJ0eXBlcyI6ICIuL2Rpc3QvZXhhbXBsZXMvaW5kZXguZC50cyIsCiAgICAgICJkZWZhdWx0IjogIi4vZGlzdC9leGFtcGxlcy9pbmRleC5qcyIKICAgIH0sCiAgICAiLi9qc29uLXNjaGVtYS8qLmpzb24iOiAiLi9qc29uLXNjaGVtYS8qLmpzb24iLAogICAgIi4vcGFja2FnZS5qc29uIjogIi4vcGFja2FnZS5qc29uIgogIH0sCiAgImZpbGVzIjogWwogICAgImRpc3QiLAogICAgInNyYyIsCiAgICAianNvbi1zY2hlbWEiLAogICAgImV4YW1wbGVzIiwKICAgICJSRUFETUUubWQiLAogICAgIkxJQ0VOU0UiCiAgXSwKICAicHVibGlzaENvbmZpZyI6IHsKICAgICJhY2Nlc3MiOiAicHVibGljIgogIH0sCiAgImVuZ2luZXMiOiB7CiAgICAibm9kZSI6ICI+PTIwLjExIgogIH0sCiAgInNjcmlwdHMiOiB7CiAgICAicHJlcHVibGlzaE9ubHkiOiAicG5wbSBydW4gYnVpbGQiLAogICAgImJ1aWxkIjogIm5vZGUgLWUgXCJyZXF1aXJlKCdub2RlOmZzJykucm1TeW5jKCdkaXN0JywgeyByZWN1cnNpdmU6IHRydWUsIGZvcmNlOiB0cnVlIH0pXCIgJiYgdHNjIC1wIHRzY29uZmlnLmJ1aWxkLmpzb24gJiYgcG5wbSBydW4gc2NoZW1hOmVtaXQiLAogICAgInR5cGVjaGVjayI6ICJ0c2MgLXAgdHNjb25maWcuanNvbiAtLW5vRW1pdCIsCiAgICAic2NoZW1hOmVtaXQiOiAidHN4IHNjcmlwdHMvZW1pdC1hcnRpZmFjdHMudHMiLAogICAgInRlc3QiOiAidml0ZXN0IHJ1biIsCiAgICAidGVzdDp3YXRjaCI6ICJ2aXRlc3QiCiAgfSwKICAiZGVwZW5kZW5jaWVzIjogewogICAgInpvZCI6ICJeNC42LjYiCiAgfSwKICAiZGV2RGVwZW5kZW5jaWVzIjogewogICAgIkB0eXBlcy9ub2RlIjogIl4yMC4xOS4wIiwKICAgICJhanYiOiAiXjguMjAuMCIsCiAgICAidHN4IjogIjQuMjMuMTIiLAogICAgInR5cGVzY3JpcHQiOiAiNy4wLjIiLAogICAgInZpdGVzdCI6ICI0LjEuMTIiCiAgfQp9Cg==', 'packages/renderer/package.json': 'ewogICJuYW1lIjogIkBjb2xkdGVhL3ByLWxlbnMtcmVuZGVyZXIiLAogICJ2ZXJzaW9uIjogIjAuNC4wIiwKICAiZGVzY3JpcHRpb24iOiAiVGhlIFBSIExlbnMgcmVuZGVyZXI6IGEgc2NoZW1hLXZhbGlkIGdyYXBoIGRvY3VtZW50IGluLCBhIHNlbGYtY29udGFpbmVkIGFuaW1hdGVkIFNWRyBvdXQuIiwKICAibGljZW5zZSI6ICJNSVQiLAogICJhdXRob3IiOiAiQ29sZHRlYSBBSSIsCiAgInJlcG9zaXRvcnkiOiB7CiAgICAidHlwZSI6ICJnaXQiLAogICAgInVybCI6ICJnaXQraHR0cHM6Ly9naXRodWIuY29tL2NvbGR0ZWFkb3RhaS9wci1sZW5zLmdpdCIsCiAgICAiZGlyZWN0b3J5IjogInBhY2thZ2VzL3JlbmRlcmVyIgogIH0sCiAgImhvbWVwYWdlIjogImh0dHBzOi8vZ2l0aHViLmNvbS9jb2xkdGVhZG90YWkvcHItbGVucy90cmVlL21haW4vcGFja2FnZXMvcmVuZGVyZXIjcmVhZG1lIiwKICAia2V5d29yZHMiOiBbCiAgICAicHItbGVucyIsCiAgICAiY29kZS1yZXZpZXciLAogICAgImFyY2hpdGVjdHVyZS1kaWFncmFtIiwKICAgICJkYXRhLWZsb3ciLAogICAgInN2ZyIsCiAgICAiZGlhZ3JhbSIKICBdLAogICJ0eXBlIjogIm1vZHVsZSIsCiAgInNpZGVFZmZlY3RzIjogZmFsc2UsCiAgImV4cG9ydHMiOiB7CiAgICAiLiI6IHsKICAgICAgInR5cGVzIjogIi4vZGlzdC9pbmRleC5kLnRzIiwKICAgICAgImRlZmF1bHQiOiAiLi9kaXN0L2luZGV4LmpzIgogICAgfSwKICAgICIuL3BhY2thZ2UuanNvbiI6ICIuL3BhY2thZ2UuanNvbiIKICB9LAogICJmaWxlcyI6IFsKICAgICJkaXN0IiwKICAgICJzcmMiLAogICAgIlJFQURNRS5tZCIsCiAgICAiTElDRU5TRSIKICBdLAogICJwdWJsaXNoQ29uZmlnIjogewogICAgImFjY2VzcyI6ICJwdWJsaWMiCiAgfSwKICAiZW5naW5lcyI6IHsKICAgICJub2RlIjogIj49MjAuMTEiCiAgfSwKICAic2NyaXB0cyI6IHsKICAgICJwcmVwdWJsaXNoT25seSI6ICJwbnBtIHJ1biBidWlsZCIsCiAgICAiYnVpbGQiOiAibm9kZSAtZSBcInJlcXVpcmUoJ25vZGU6ZnMnKS5ybVN5bmMoJ2Rpc3QnLCB7IHJlY3Vyc2l2ZTogdHJ1ZSwgZm9yY2U6IHRydWUgfSlcIiAmJiB0c2MgLXAgdHNjb25maWcuYnVpbGQuanNvbiIsCiAgICAidHlwZWNoZWNrIjogInRzYyAtcCB0c2NvbmZpZy5qc29uIC0tbm9FbWl0IiwKICAgICJ0ZXN0IjogInZpdGVzdCBydW4iLAogICAgInRlc3Q6d2F0Y2giOiAidml0ZXN0IgogIH0sCiAgImRlcGVuZGVuY2llcyI6IHsKICAgICJAY29sZHRlYS9wci1sZW5zLXNjaGVtYSI6ICJ3b3Jrc3BhY2U6KiIKICB9LAogICJkZXZEZXBlbmRlbmNpZXMiOiB7CiAgICAiQHR5cGVzL25vZGUiOiAiXjIwLjE5LjAiLAogICAgInR5cGVzY3JpcHQiOiAiNy4wLjIiLAogICAgInZpdGVzdCI6ICI0LjEuMTIiCiAgfQp9Cg==', 'packages/cli/package.json': 'ewogICJuYW1lIjogIkBjb2xkdGVhL3ByLWxlbnMtY2xpIiwKICAidmVyc2lvbiI6ICIwLjE0LjAiLAogICJkZXNjcmlwdGlvbiI6ICJUaGUgUFIgTGVucyBjb21tYW5kIGxpbmU6IHR1cm4gYSBwdWxsIHJlcXVlc3QgZGlmZiBpbnRvIGEgc2NoZW1hLXZhbGlkIGdyYXBoIHdpdGggeW91ciBvd24gbW9kZWwga2V5LCByZW5kZXIgaXQsIGFuZCBjb21wb3NlIHRoZSBjb21tZW50LiIsCiAgImxpY2Vuc2UiOiAiTUlUIiwKICAiYXV0aG9yIjogIkNvbGR0ZWEgQUkiLAogICJyZXBvc2l0b3J5IjogewogICAgInR5cGUiOiAiZ2l0IiwKICAgICJ1cmwiOiAiZ2l0K2h0dHBzOi8vZ2l0aHViLmNvbS9jb2xkdGVhZG90YWkvcHItbGVucy5naXQiLAogICAgImRpcmVjdG9yeSI6ICJwYWNrYWdlcy9jbGkiCiAgfSwKICAiaG9tZXBhZ2UiOiAiaHR0cHM6Ly9naXRodWIuY29tL2NvbGR0ZWFkb3RhaS9wci1sZW5zL3RyZWUvbWFpbi9wYWNrYWdlcy9jbGkjcmVhZG1lIiwKICAia2V5d29yZHMiOiBbCiAgICAicHItbGVucyIsCiAgICAiY29kZS1yZXZpZXciLAogICAgImFyY2hpdGVjdHVyZS1kaWFncmFtIiwKICAgICJkYXRhLWZsb3ciLAogICAgImNsaSIsCiAgICAiYnlvayIKICBdLAogICJ0eXBlIjogIm1vZHVsZSIsCiAgImJpbiI6IHsKICAgICJwci1sZW5zIjogIi4vZGlzdC9iaW4uanMiCiAgfSwKICAiZXhwb3J0cyI6IHsKICAgICIuL3BhY2thZ2UuanNvbiI6ICIuL3BhY2thZ2UuanNvbiIKICB9LAogICJmaWxlcyI6IFsKICAgICJkaXN0IiwKICAgICJzcmMiLAogICAgIlJFQURNRS5tZCIsCiAgICAiTElDRU5TRSIKICBdLAogICJwdWJsaXNoQ29uZmlnIjogewogICAgImFjY2VzcyI6ICJwdWJsaWMiCiAgfSwKICAiZW5naW5lcyI6IHsKICAgICJub2RlIjogIj49MjAuMTEiCiAgfSwKICAic2NyaXB0cyI6IHsKICAgICJwcmVwdWJsaXNoT25seSI6ICJwbnBtIHJ1biBidWlsZCIsCiAgICAiYnVpbGQiOiAibm9kZSAtZSBcInJlcXVpcmUoJ25vZGU6ZnMnKS5ybVN5bmMoJ2Rpc3QnLCB7IHJlY3Vyc2l2ZTogdHJ1ZSwgZm9yY2U6IHRydWUgfSlcIiAmJiB0c2MgLXAgdHNjb25maWcuYnVpbGQuanNvbiIsCiAgICAidHlwZWNoZWNrIjogInRzYyAtcCB0c2NvbmZpZy5qc29uIC0tbm9FbWl0IiwKICAgICJ0ZXN0IjogInZpdGVzdCBydW4iLAogICAgInRlc3Q6d2F0Y2giOiAidml0ZXN0IgogIH0sCiAgImRlcGVuZGVuY2llcyI6IHsKICAgICJAY29sZHRlYS9wci1sZW5zLXJlbmRlcmVyIjogIndvcmtzcGFjZTpeIiwKICAgICJAY29sZHRlYS9wci1sZW5zLXNjaGVtYSI6ICJ3b3Jrc3BhY2U6XiIsCiAgICAieWFtbCI6ICJeMi44LjEiLAogICAgInpvZCI6ICJeNC42LjYiCiAgfSwKICAiZGV2RGVwZW5kZW5jaWVzIjogewogICAgIkB0eXBlcy9ub2RlIjogIl4yMC4xOS4wIiwKICAgICJ0eXBlc2NyaXB0IjogIjcuMC4yIiwKICAgICJ2aXRlc3QiOiAiNC4xLjEyIgogIH0KfQo='}
+          for path, content in entries.items():
+              raw = base64.b64decode(content)
+              Path(path).write_bytes(raw)
+              print(path, hashlib.sha256(raw).hexdigest())
+      - name: Check diff and seed stale artifacts
+        shell: python
+        run: |
+          from pathlib import Path
+          import subprocess
+          subprocess.run(['git', 'diff', '--check'], check=True)
+          for name in ['schema', 'renderer', 'cli']:
+              dist = Path('packages') / name / 'dist'
+              for rel in ['stale artifact.txt', 'stale-nested/old.js']:
+                  target = dist / rel
+                  target.parent.mkdir(parents=True, exist_ok=True)
+                  target.write_text('old artifact', encoding='utf-8')
+      - run: pnpm verify
+      - name: Verify stale artifacts removed and entry points rebuilt
+        shell: python
+        run: |
+          from pathlib import Path
+          for name in ['schema', 'renderer', 'cli']:
+              dist = Path('packages') / name / 'dist'
+              for rel in ['stale artifact.txt', 'stale-nested/old.js']:
+                  assert not (dist / rel).exists(), str(dist / rel)
+              entry = 'bin.js' if name == 'cli' else 'index.js'
+              assert (dist / entry).is_file(), str(dist / entry)
+          print('PASS: six stale artifacts removed and compiled entry points recreated')
