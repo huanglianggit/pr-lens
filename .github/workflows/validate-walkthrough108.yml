@@ -1,0 +1,40 @@
+name: Verify Windows walkthrough test paths (issue 108)
+on:
+  push:
+    branches:
+      - validation/windows-walkthrough-test-paths-108-2026-11-18
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        variant: [baseline, patched]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.5.2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24.19.0
+          cache: pnpm
+      - name: Apply verified patch bytes
+        if: matrix.variant == 'patched'
+        shell: python
+        run: |
+          import base64
+          import hashlib
+          from pathlib import Path
+          for path, encoded in {'packages/renderer/test/walkthrough-browser.test.ts': 'aW1wb3J0IHsgcmVhZEZpbGVTeW5jIH0gZnJvbSAibm9kZTpmcyI7CmltcG9ydCB7IGRpcm5hbWUsIHJlbGF0aXZlLCByZXNvbHZlLCBzZXAgfSBmcm9tICJub2RlOnBhdGgiOwppbXBvcnQgeyBmaWxlVVJMVG9QYXRoIH0gZnJvbSAibm9kZTp1cmwiOwppbXBvcnQgeyBkZXNjcmliZSwgZXhwZWN0LCBpdCB9IGZyb20gInZpdGVzdCI7CgovKiogQSBidW5kbGVyIGZvbGxvd3MgZXZlcnkgaW1wb3J0LCBzbyBvbmUgYG5vZGU6YCBpbXBvcnQgdW5kZXIgdGhlIGJyb3dzZXIgZW50cnkgYnJlYWtzIHRoZSBjYW52YXMgYnVpbGQuICovCmNvbnN0IFNPVVJDRSA9IHJlc29sdmUoZGlybmFtZShmaWxlVVJMVG9QYXRoKGltcG9ydC5tZXRhLnVybCkpLCAiLi4vc3JjIik7CmNvbnN0IEVOVFJZID0gcmVzb2x2ZShTT1VSQ0UsICJ3YWxrdGhyb3VnaC9pbmRleC50cyIpOwoKY29uc3Qgc3BlY2lmaWVycyA9IChmaWxlOiBzdHJpbmcpOiBzdHJpbmdbXSA9PgogIFsuLi5yZWFkRmlsZVN5bmMoZmlsZSwgInV0ZjgiKS5tYXRjaEFsbCgvXig/OmltcG9ydHxleHBvcnQpW14iJ10qP2Zyb21ccytbIiddKFteIiddKylbIiddL2dtKV0uZmxhdE1hcCgobWF0Y2gpID0+CiAgICBtYXRjaFsxXSA9PT0gdW5kZWZpbmVkID8gW10gOiBbbWF0Y2hbMV1dLAogICk7Cgpjb25zdCByZWFjaGFibGUgPSAoZW50cnk6IHN0cmluZyk6IHsgZmlsZXM6IFNldDxzdHJpbmc+OyBiYXJlOiBTZXQ8c3RyaW5nPiB9ID0+IHsKICBjb25zdCBmaWxlcyA9IG5ldyBTZXQ8c3RyaW5nPigpOwogIGNvbnN0IGJhcmUgPSBuZXcgU2V0PHN0cmluZz4oKTsKICBjb25zdCB2aXNpdCA9IChmaWxlOiBzdHJpbmcpOiB2b2lkID0+IHsKICAgIGlmIChmaWxlcy5oYXMoZmlsZSkpIHJldHVybjsKICAgIGZpbGVzLmFkZChmaWxlKTsKICAgIGZvciAoY29uc3Qgc3BlY2lmaWVyIG9mIHNwZWNpZmllcnMoZmlsZSkpIHsKICAgICAgaWYgKCFzcGVjaWZpZXIuc3RhcnRzV2l0aCgiLiIpKSB7CiAgICAgICAgYmFyZS5hZGQoc3BlY2lmaWVyKTsKICAgICAgICBjb250aW51ZTsKICAgICAgfQogICAgICB2aXNpdChyZXNvbHZlKGRpcm5hbWUoZmlsZSksIHNwZWNpZmllci5yZXBsYWNlKC9cLmpzJC8sICIudHMiKSkpOwogICAgfQogIH07CiAgdmlzaXQoZW50cnkpOwogIHJldHVybiB7IGZpbGVzLCBiYXJlIH07Cn07CgpkZXNjcmliZSgidGhlIHdhbGt0aHJvdWdoIGVudHJ5IiwgKCkgPT4gewogIGNvbnN0IGdyYXBoID0gcmVhY2hhYmxlKEVOVFJZKTsKCiAgaXQoInJlYWNoZXMgbm90aGluZyBvZiBub2RlIiwgKCkgPT4gewogICAgZXhwZWN0KFsuLi5ncmFwaC5iYXJlXS5maWx0ZXIoKHNwZWNpZmllcikgPT4gc3BlY2lmaWVyLnN0YXJ0c1dpdGgoIm5vZGU6IikpKS50b0VxdWFsKFtdKTsKICAgIGV4cGVjdChbLi4uZ3JhcGguYmFyZV0pLnRvRXF1YWwoWyJAY29sZHRlYS9wci1sZW5zLXNjaGVtYSJdKTsKICB9KTsKCiAgaXQoImxlYXZlcyB0aGUgZHJhd2luZywgaGFzaGluZyBhbmQgbWFuaWZlc3QgYmVoaW5kIiwgKCkgPT4gewogICAgY29uc3QgbmFtZXMgPSBbLi4uZ3JhcGguZmlsZXNdCiAgICAgIC5tYXAoKGZpbGUpID0+IHJlbGF0aXZlKFNPVVJDRSwgZmlsZSkuc3BsaXQoc2VwKS5qb2luKCIvIikpCiAgICAgIC5zb3J0KCk7CiAgICBmb3IgKGNvbnN0IGZpbGUgb2YgbmFtZXMpIGV4cGVjdChmaWxlKS5ub3QudG9NYXRjaCgvXihyZW5kZXJ8bWFuaWZlc3R8c3ZnXC98bGF5b3V0XC98d2Fsa3Rocm91Z2hcLyhlbWJlZHx0aWxlc3xuZXN0fGNhcHRpb24pKS8pOwogICAgZXhwZWN0KG5hbWVzKS50b0NvbnRhaW4oIndhbGt0aHJvdWdoL2NhbWVyYS50cyIpOwogICAgZXhwZWN0KG5hbWVzKS50b0NvbnRhaW4oIndhbGt0aHJvdWdoL3Jlc29sdmUudHMiKTsKICB9KTsKfSk7Cg=='}.items():
+              raw = base64.b64decode(encoded)
+              Path(path).write_bytes(raw)
+              print(path, hashlib.sha256(raw).hexdigest())
+      - run: git diff --check
+      - run: pnpm install --frozen-lockfile --ignore-scripts
+      - run: pnpm verify
